@@ -1,0 +1,22 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+log = "0.4"
+env_logger = "0.9"
+dotenv = "0.15"
+serde_json = { version = "1.0", default-features = false, features = ["std"] }
+serde = { version = "1", default-features = false, features = [
+    "alloc",
+    "std",
+    "derive",
+] }
+tracing = "0.1.40"
+tower-http = { version="0.5.2", features = ["trace"] }
+tracing-subscriber = "0.3"
+hyper = "1.2.0"
+tower = "0.4.13"
+axum = "0.7.4"
