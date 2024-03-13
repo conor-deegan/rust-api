@@ -1,13 +1,12 @@
 use axum::{
-    response::{IntoResponse, Response},
     http::StatusCode,
+    response::{IntoResponse, Response},
     Json,
 };
-use serde_json::json;
-use std::fmt::{self, Display, Formatter};
-use std::error::Error;
 use log::error;
-
+use serde_json::json;
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug)]
 pub struct CustomError {

@@ -8,27 +8,27 @@ pub fn initialize_logger() {
                 tracing_subscriber::fmt()
                     .with_max_level(tracing::Level::INFO)
                     .init();
-            },
+            }
             "debug" => {
                 tracing_subscriber::fmt()
                     .with_max_level(tracing::Level::DEBUG)
                     .init();
-            },
+            }
             "warn" => {
                 tracing_subscriber::fmt()
                     .with_max_level(tracing::Level::WARN)
                     .init();
-            },
+            }
             "error" => {
                 tracing_subscriber::fmt()
                     .with_max_level(tracing::Level::ERROR)
                     .init();
-            },
+            }
             _ => {
                 tracing_subscriber::fmt()
                     .with_max_level(tracing::Level::INFO)
                     .init();
-            },
+            }
         }
     }
 }

@@ -1,10 +1,13 @@
-use axum::http::StatusCode;
 use crate::{types::user::CreateUserRequest, utils::error::CustomError};
-use serde_json::{json, Value};
+use axum::http::StatusCode;
 use log::info;
+use serde_json::{json, Value};
 
 pub async fn create_user(user: CreateUserRequest) -> Result<Value, CustomError> {
-    info!("Creating user with name: {} and age {}", user.name, user.age);
+    info!(
+        "Creating user with name: {} and age {}",
+        user.name, user.age
+    );
     if some_condition_that_fails() {
         Err(CustomError {
             status_code: StatusCode::BAD_REQUEST,

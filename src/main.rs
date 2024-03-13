@@ -4,20 +4,23 @@
 // SQLX
 // docker
 
-use log::{info, warn};
-use std::net::SocketAddr;
 use axum::{
-    http::{ StatusCode, Uri }, response::Json, routing::any, Router
+    http::{StatusCode, Uri},
+    response::Json,
+    routing::any,
+    Router,
 };
+use log::{info, warn};
 use serde_json::json;
+use std::net::SocketAddr;
 use tower_http::trace::TraceLayer;
 
+mod controllers;
+mod middleware;
 mod routes;
 mod services;
-mod controllers;
-mod utils;
 mod types;
-mod middleware;
+mod utils;
 
 async fn app() -> Router {
     // Load the .env file
@@ -33,7 +36,8 @@ async fn app() -> Router {
     ];
 
     // Merge the routers
-    routers.into_iter()
+    routers
+        .into_iter()
         .reduce(|acc, router| acc.merge(router))
         .unwrap()
         // Fallback route 404
@@ -59,7 +63,7 @@ async fn main() {
         Err(e) => {
             warn!("Failed to parse address: {}", e);
             return;
-        },
+        }
     };
 
     info!("Server started");
