@@ -33,7 +33,7 @@ async fn app() -> Router {
     ];
 
     // Merge the routers
-    let app = routers.into_iter()
+    routers.into_iter()
         .reduce(|acc, router| acc.merge(router))
         .unwrap()
         // Fallback route 404
@@ -42,8 +42,7 @@ async fn app() -> Router {
             (StatusCode::NOT_FOUND, Json(response_body))
         }))
         // Add middleware
-        .layer(TraceLayer::new_for_http());
-    app
+        .layer(TraceLayer::new_for_http())
 }
 
 #[tokio::main]
