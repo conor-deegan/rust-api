@@ -1,5 +1,5 @@
-mod vars;
 mod db;
+mod vars;
 
-pub use vars::ConfigVars;
 pub use db::connect_db;
+pub use vars::ConfigVars;

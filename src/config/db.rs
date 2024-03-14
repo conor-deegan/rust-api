@@ -1,8 +1,8 @@
+use crate::config::ConfigVars;
 use sqlx::postgres::{PgPool, PgPoolOptions};
 use sqlx::Result;
-use tracing::info;
 use std::sync::Arc;
-use crate::config::ConfigVars;
+use tracing::info;
 
 pub async fn connect_db(config: &ConfigVars) -> Result<Arc<PgPool>> {
     let pool = PgPoolOptions::new()
@@ -14,7 +14,7 @@ pub async fn connect_db(config: &ConfigVars) -> Result<Arc<PgPool>> {
         Ok(pool) => {
             info!("connected to database");
             Ok(Arc::new(pool))
-        },
+        }
         Err(e) => panic!("failed to connect to database: {}", e),
     }
 }

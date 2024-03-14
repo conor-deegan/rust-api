@@ -5,22 +5,25 @@
 // docker and kube locally. Get used to Kube again.
 
 use axum::{
-    http::{StatusCode, Uri}, response::Json, routing::any, Extension, Router
+    http::{StatusCode, Uri},
+    response::Json,
+    routing::any,
+    Extension, Router,
 };
-use sqlx::postgres::PgPool;
-use std::sync::Arc;
 use log::{info, warn};
 use serde_json::json;
+use sqlx::postgres::PgPool;
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower_http::trace::TraceLayer;
 
+mod config;
 mod controllers;
 mod middleware;
 mod routes;
 mod services;
 mod types;
 mod utils;
-mod config;
 
 async fn app(pool: Arc<PgPool>) -> Router {
     // Define routes
