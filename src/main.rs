@@ -1,15 +1,14 @@
 // todo:
-// lint to order things etc?
 // request validation
-// SQLX
-// docker
+// SQLX: https://chat.openai.com/c/f845dda9-0b65-4061-8c20-b7c3426a5f70
+// Figure out how to add tables and do SQLX migrations
+// docker and kube locally. Get used to Kube again.
 
 use axum::{
-    http::{StatusCode, Uri},
-    response::Json,
-    routing::any,
-    Router,
+    http::{StatusCode, Uri}, response::Json, routing::any, Extension, Router
 };
+use sqlx::postgres::PgPool;
+use std::sync::Arc;
 use log::{info, warn};
 use serde_json::json;
 use std::net::SocketAddr;
@@ -21,14 +20,9 @@ mod routes;
 mod services;
 mod types;
 mod utils;
+mod config;
 
-async fn app() -> Router {
-    // Load the .env file
-    dotenv::dotenv().ok();
-
-    // initialize the logger
-    utils::logging::initialize_logger();
-
+async fn app(pool: Arc<PgPool>) -> Router {
     // Define routes
     let routers = vec![
         routes::user::routes(),
@@ -46,16 +40,26 @@ async fn app() -> Router {
             (StatusCode::NOT_FOUND, Json(response_body))
         }))
         // Add middleware
+        .layer(Extension(pool))
         .layer(TraceLayer::new_for_http())
 }
 
 #[tokio::main]
 async fn main() {
+    // load the config
+    let config = config::ConfigVars::new();
+
+    // initialize the logger
+    utils::logging::initialize_logger(config.log_level.clone());
+
+    // connect to the database
+    let pool = config::connect_db(&config).await.unwrap();
+
     // Load the app
-    let app = app().await;
+    let app = app(pool).await;
 
     // Run the server
-    let addr = "127.0.0.1:3000".parse::<SocketAddr>();
+    let addr = config.host_and_port().parse::<SocketAddr>();
 
     // Use pattern matching to handle the Result
     let addr = match addr {
@@ -66,8 +70,9 @@ async fn main() {
         }
     };
 
-    info!("Server started");
-    info!("Listening on {}", addr);
+    info!("server started");
+    info!("listening on {}", addr);
+    info!("environment: {}", config.app_env);
 
     // Start the server
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
