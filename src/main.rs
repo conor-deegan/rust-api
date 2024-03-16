@@ -1,77 +1,69 @@
+use api::AppState;
 use axum::{
     http::{StatusCode, Uri},
     response::Json,
-    routing::any,
-    Extension, Router,
+    routing::{any, get, post},
+    Router,
 };
-use log::{info, warn};
+use clap::Parser;
+use env_logger::Env;
+use log::info;
 use serde_json::json;
-use sqlx::postgres::PgPool;
-use std::net::SocketAddr;
-use std::sync::Arc;
-use tower_http::trace::TraceLayer;
 
-mod config;
-mod controllers;
-mod middleware;
-mod routes;
-mod services;
-mod types;
-mod utils;
+#[derive(Parser)]
+#[command()]
+struct Config {
+    #[arg(short, long, default_value = "development")]
+    app_env: String,
 
-async fn app(pool: Arc<PgPool>) -> Router {
-    // Define routes
-    let routers = vec![
-        routes::user::routes(),
-        // Add more routers from other modules
-    ];
+    #[arg(
+        short,
+        long,
+        default_value = "postgres://postgres:password@localhost:5432/db"
+    )]
+    db_uri: String,
 
-    // Merge the routers
-    routers
-        .into_iter()
-        .reduce(|acc, router| acc.merge(router))
-        .unwrap()
-        // Fallback route 404
-        .fallback(any(|uri: Uri| async move {
-            let response_body = json!({ "error": format!("No route found for path {}", uri) });
-            (StatusCode::NOT_FOUND, Json(response_body))
-        }))
-        // Add middleware
-        .layer(Extension(pool))
-        .layer(TraceLayer::new_for_http())
+    #[arg(short = 'H', long, default_value = "localhost")]
+    host: String,
+
+    #[arg(short, long, default_value_t = 8080)]
+    port: u16,
 }
 
 #[tokio::main]
-async fn main() {
-    // load the config
-    let config = config::ConfigVars::new();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().expect("unable to load .env file");
+    let config = Config::parse();
 
     // initialize the logger
-    utils::logging::initialize_logger(config.log_level.clone());
+    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
     // connect to the database
-    let pool = config::connect_db(&config).await.unwrap();
-
-    // Load the app
-    let app = app(pool).await;
-
-    // Run the server
-    let addr = config.host_and_port().parse::<SocketAddr>();
-
-    // Use pattern matching to handle the Result
-    let addr = match addr {
-        Ok(a) => a,
-        Err(e) => {
-            warn!("Failed to parse address: {}", e);
-            return;
-        }
-    };
+    let pool = api::config::connect_db(&config.db_uri).await?;
 
     info!("server started");
-    info!("listening on {}", addr);
+    info!("listening on {}:{}", config.host, config.port);
     info!("environment: {}", config.app_env);
 
+    // Define routes
+    let app = Router::new()
+        .nest(
+            "/users",
+            Router::new()
+                .route("/", post(api::controllers::user::create_user::create_user))
+                .route("/:id", get(api::controllers::user::get_user::get_user)),
+        )
+        .with_state(AppState { pool })
+        .fallback(any(|uri: Uri| async move {
+            let response_body = json!({ "error": format!("No route found for path {}", uri) });
+            (StatusCode::NOT_FOUND, Json(response_body))
+        }));
+
     // Start the server
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port))
+        .await
+        .expect("could not bind to host / port");
     axum::serve(listener, app).await.unwrap();
+
+    Ok(())
 }
