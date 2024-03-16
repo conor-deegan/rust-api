@@ -12,17 +12,17 @@ pub async fn create_user(
 ) -> Result<Value, CustomError> {
     info!("{:?}", user);
 
-    let res = sqlx::query_as::<_, (i32,)>(
+    let res = sqlx::query!(
         "INSERT INTO users (name, age, gender) VALUES ($1, $2, $3) RETURNING id",
+        &user.name,
+        user.age,
+        &user.gender
     )
-    .bind(&user.name)
-    .bind(user.age)
-    .bind(&user.gender)
     .fetch_one(&*pool)
     .await;
 
     match res {
-        Ok(record) => Ok(json!({ "message": "user created", "id": record.0 })),
+        Ok(record) => Ok(json!({ "message": "user created", "id": record.id })),
         Err(e) => Err(CustomError {
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
             message: format!("Failed to create user: {:?}", e.to_string()),

@@ -15,10 +15,13 @@ pub async fn get_user(
 ) -> Result<Value, CustomError> {
     info!("Looking up user id: {}", payload.id);
 
-    let result = sqlx::query_as::<_, User>("SELECT id, name, age, gender FROM users WHERE id = $1")
-        .bind(payload.id)
-        .fetch_one(&*pool)
-        .await;
+    let result = sqlx::query_as!(
+        User,
+        "SELECT id, name, age, gender FROM users WHERE id = $1",
+        payload.id
+    )
+    .fetch_one(&*pool)
+    .await;
 
     match result {
         Ok(user) => Ok(json!(user)),
