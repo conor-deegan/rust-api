@@ -1,9 +1,3 @@
-// todo:
-// request validation
-// SQLX: https://chat.openai.com/c/f845dda9-0b65-4061-8c20-b7c3426a5f70
-// Figure out how to add tables and do SQLX migrations
-// docker and kube locally. Get used to Kube again.
-
 use axum::{
     http::{StatusCode, Uri},
     response::Json,
