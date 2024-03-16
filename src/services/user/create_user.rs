@@ -17,7 +17,7 @@ pub async fn create_user(
     )
     .bind(&user.name)
     .bind(user.age)
-    .bind(user.gender)
+    .bind(&user.gender)
     .fetch_one(&*pool)
     .await;
 
