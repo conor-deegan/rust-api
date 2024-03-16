@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::{types::user::GetUserRequest, utils::error::CustomError};
+use crate::{
+    types::user::{GetUserRequest, User},
+    utils::error::CustomError,
+};
 use axum::Extension;
 use log::info;
 use serde_json::{json, Value};
@@ -8,8 +11,23 @@ use sqlx::PgPool;
 
 pub async fn get_user(
     payload: GetUserRequest,
-    Extension(_pool): Extension<Arc<PgPool>>,
+    Extension(pool): Extension<Arc<PgPool>>,
 ) -> Result<Value, CustomError> {
     info!("Looking up user id: {}", payload.id);
-    Ok(json!({ "message": "hi i am the user" }))
+
+    let result = sqlx::query_as::<_, User>("SELECT id, name, age, gender FROM users WHERE id = $1")
+        .bind(payload.id)
+        .fetch_one(&*pool)
+        .await;
+
+    match result {
+        Ok(user) => Ok(json!(user)),
+        Err(e) => {
+            info!("Failed to fetch user: {:?}", e);
+            Err(CustomError {
+                status_code: axum::http::StatusCode::NOT_FOUND,
+                message: format!("No user found with ID {}", payload.id),
+            })
+        }
+    }
 }

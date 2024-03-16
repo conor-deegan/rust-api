@@ -11,14 +11,18 @@ pub async fn create_user(
     Extension(pool): Extension<Arc<PgPool>>,
 ) -> Result<Value, CustomError> {
     info!("{:?}", user);
-    let res = sqlx::query("INSERT INTO users (name, age) VALUES ($1, $2)")
-        .bind(&user.name)
-        .bind(user.age)
-        .execute(&*pool)
-        .await;
+
+    let res = sqlx::query_as::<_, (i32,)>(
+        "INSERT INTO users (name, age, gender) VALUES ($1, $2, $3) RETURNING id",
+    )
+    .bind(&user.name)
+    .bind(user.age)
+    .bind(user.gender)
+    .fetch_one(&*pool)
+    .await;
 
     match res {
-        Ok(_) => Ok(json!({ "message": "user created" })),
+        Ok(record) => Ok(json!({ "message": "user created", "id": record.0 })),
         Err(e) => Err(CustomError {
             status_code: StatusCode::INTERNAL_SERVER_ERROR,
             message: format!("Failed to create user: {:?}", e.to_string()),

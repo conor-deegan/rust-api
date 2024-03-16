@@ -16,8 +16,8 @@ impl ConfigVars {
 
         // Get environment variables or default values
         let app_env = env::var("ENV").unwrap_or_else(|_| "development".into());
-        let db_uri = env::var("DB_URI")
-            .unwrap_or_else(|_| "postgres://postgres:password@localhost:5432".into());
+        let db_uri = env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "postgres://postgres:password@localhost:5432/db".into());
         let log_level = env::var("LOG_LEVEL").unwrap_or_else(|_| "debug".into());
         let host = env::var("HOST").unwrap_or_else(|_| "127.0.0.1".into());
         let port = env::var("PORT")

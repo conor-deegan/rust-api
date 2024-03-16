@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tracing::info;
 
 pub async fn connect_db(config: &ConfigVars) -> Result<Arc<PgPool>> {
+    info!("connecting to database...");
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&config.db_uri)
