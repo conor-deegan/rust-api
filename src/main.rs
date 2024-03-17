@@ -1,6 +1,8 @@
+use api::middleware::auth::auth;
 use api::AppState;
 use axum::{
     http::{StatusCode, Uri},
+    middleware::from_fn,
     response::Json,
     routing::{any, get, post},
     Router,
@@ -9,6 +11,7 @@ use clap::Parser;
 use env_logger::Env;
 use log::info;
 use serde_json::json;
+use tower_http::trace::TraceLayer;
 
 #[derive(Parser)]
 #[command()]
@@ -51,13 +54,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "/users",
             Router::new()
                 .route("/", post(api::controllers::user::create_user::create_user))
-                .route("/:id", get(api::controllers::user::get_user::get_user)),
+                .route("/:id", get(api::controllers::user::get_user::get_user))
+                .layer(from_fn(auth)),
         )
         .with_state(AppState { pool })
         .fallback(any(|uri: Uri| async move {
             let response_body = json!({ "error": format!("No route found for path {}", uri) });
             (StatusCode::NOT_FOUND, Json(response_body))
-        }));
+        }))
+        .layer(TraceLayer::new_for_http());
 
     // Start the server
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port))

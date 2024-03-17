@@ -1,5 +1,6 @@
 use crate::{
-    services::user::get_user::get_user as get_user_service, types::user::GetUserRequest, AppState,
+    error::Error, services::user::get_user::get_user as get_user_service,
+    types::user::GetUserRequest, AppState,
 };
 use axum::{
     extract::{Path, State},
@@ -14,10 +15,7 @@ pub async fn get_user(
 ) -> impl IntoResponse {
     match get_user_service(&state.pool, params).await {
         Ok(res) => (StatusCode::OK, Json(res)).into_response(),
-        Err(error) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(format!("shits fucked: {error:?}")),
-        )
-            .into_response(),
+        Err(Error::NotFound(res)) => (StatusCode::NOT_FOUND, Json(res)).into_response(),
+        Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, Json(error.to_string())).into_response(),
     }
 }

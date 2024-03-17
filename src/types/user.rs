@@ -13,7 +13,7 @@ pub struct GetUserRequest {
     pub id: i32,
 }
 
-#[derive(FromRow, Serialize, Deserialize)]
+#[derive(FromRow, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: i32,
     pub name: String,

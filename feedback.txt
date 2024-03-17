@@ -1,9 +1,0 @@
-PgPool is cheaply clonable - you shouldn’t need to wrap it in an Arc: https://github.com/conor-deegan/rust-api/blob/8bd0def05c9b6f745cc294c00e96970d4b3c52a0/src/main.rs#L22C1-L22C44
-You can use tracing / env_logger to pull the logging level from RUST_LOG env var - rather than this: https://github.com/conor-deegan/rust-api/blob/main/src/utils/logging/mod.rs
-You may want to look at crates like thiserror so you don’t have to impl Error yourself https://github.com/conor-deegan/rust-api/blob/main/src/utils/error/mod.rs
-
-Couple of things around structure:
-I think you should use State over Extension for passing the pool around.
-I think there is pretty tight coupling of the http frontend to the rest of your app - e.g. service::user::create_user (which does the actual db sql) takes an axum::Extension and responds with a HTTP status. Remove HTTP logic from the service layer and have the service layer return a Result and then have the HTTP layer handle the Result and return the appropriate HTTP status.
-Use clap rather than do this: https://github.com/conor-deegan/rust-api/blob/main/src/config/vars.rs
-(preference here) but i prefer to split out how it’s being run (http server, axum etc) from the logic that is doing the work - your library. This is possible in the one crate by creating a lib.rs which will be your library, and you can call into that from main
