@@ -44,10 +44,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // connect to the database
     let pool = api::config::connect_db(&config.db_uri).await?;
 
-    info!("server started");
-    info!("listening on {}:{}", config.host, config.port);
-    info!("environment: {}", config.app_env);
-
     // Define routes
     let app = Router::new()
         .nest(
@@ -63,6 +59,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             (StatusCode::NOT_FOUND, Json(response_body))
         }))
         .layer(TraceLayer::new_for_http());
+
+    info!("server started");
+    info!("listening on {}:{}", config.host, config.port);
+    info!("environment: {}", config.app_env);
 
     // Start the server
     let listener = tokio::net::TcpListener::bind(format!("{}:{}", config.host, config.port))
