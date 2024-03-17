@@ -7,6 +7,14 @@ pub async fn connect_db(db_uri: &str) -> Result<PgPool, sqlx::Error> {
         .max_connections(5)
         .connect(db_uri)
         .await;
-    info!("connected to db");
-    pool
+    match pool {
+        Ok(_) => {
+            info!("Connected to the database.");
+            pool
+        }
+        Err(e) => {
+            info!("Failed to connect to the database: {}", e);
+            Err(e)
+        }
+    }
 }
