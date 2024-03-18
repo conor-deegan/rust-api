@@ -13,30 +13,12 @@ use log::info;
 use serde_json::json;
 use tower_http::trace::TraceLayer;
 
-#[derive(Parser)]
-#[command()]
-struct Config {
-    #[arg(short, long, default_value = "development")]
-    app_env: String,
-
-    #[arg(
-        short,
-        long,
-        default_value = "postgres://postgres:password@localhost:5432/db"
-    )]
-    db_uri: String,
-
-    #[arg(short = 'H', long, default_value = "localhost")]
-    host: String,
-
-    #[arg(short, long, default_value_t = 8080)]
-    port: u16,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+
+    // load the .env file and configure the environment
     dotenv::dotenv().expect("unable to load .env file");
-    let config = Config::parse();
+    let config = api::config::Config::parse();
 
     // initialize the logger
     env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();

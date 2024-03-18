@@ -2,6 +2,7 @@ use sqlx::PgPool;
 
 pub mod config;
 pub mod controllers;
+pub mod database;
 pub mod error;
 pub mod middleware;
 pub mod services;

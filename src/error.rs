@@ -6,4 +6,6 @@ pub enum Error {
     NotFound(String),
     #[error("validation error: {0}")]
     ValidationError(String),
+    #[error("query error: {0}")]
+    Query(#[source] sqlx::Error),
 }

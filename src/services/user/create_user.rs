@@ -1,7 +1,4 @@
-use crate::{
-    error::Error,
-    types::user::{CreateUserRequest, User},
-};
+use crate::{database, error::Error, types::user::CreateUserRequest};
 use log::{error, info};
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -15,18 +12,9 @@ pub async fn create_user(pool: &PgPool, user: CreateUserRequest) -> Result<Value
             "User must be at least 18 years old.".to_string(),
         ));
     }
+    let new_user = database::user::create_user(pool, &user).await?;
 
-    let res = sqlx::query_as!(
-        User,
-        "INSERT INTO users (name, age, gender) VALUES ($1, $2, $3) RETURNING id, name, age, gender",
-        &user.name,
-        user.age,
-        &user.gender
-    )
-    .fetch_one(pool)
-    .await?;
+    info!("user created successfully id: {:?}", new_user.id);
 
-    info!("user created successfully id: {:?}", res.id);
-
-    Ok(json!({ "message": "user created", "id": res.id }))
+    Ok(json!({ "message": "user created", "id": new_user.id }))
 }
